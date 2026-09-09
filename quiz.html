@@ -10,8 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#FDFCF7;
-    --grid:#DCE6EF;
     --ink:#1F3A5F;
     --pencil:#6B7A8F;
     --correct:#1E8E5A;
@@ -28,23 +26,79 @@
     min-height:100vh;
     font-family:'Jua','Malgun Gothic','맑은 고딕',sans-serif;
     color:var(--ink);
-    background-color:var(--paper);
-    background-image:
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size:var(--cell) var(--cell);
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    padding:24px 16px 48px;
+    padding:28px 16px 52px;
     font-variant-numeric:tabular-nums;
+    position:relative;
+    overflow-x:hidden;
+
+    /* 네 귀퉁이에서 번지는 색 위에 옅은 모눈을 얹는다 */
+    background-color:#EDF4FA;
+    background-image:
+      linear-gradient(rgba(31,58,95,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(31,58,95,.055) 1px, transparent 1px),
+      radial-gradient(62vmax 62vmax at 8% -12%,  #FFE9A8 0%, rgba(255,233,168,0) 62%),
+      radial-gradient(54vmax 54vmax at 102% 6%,  #A9DCFF 0%, rgba(169,220,255,0) 62%),
+      radial-gradient(58vmax 58vmax at 16% 112%, #BDF3D8 0%, rgba(189,243,216,0) 62%),
+      radial-gradient(50vmax 50vmax at 94% 104%, #FFCFE1 0%, rgba(255,207,225,0) 62%),
+      linear-gradient(158deg, #FEFDF9 0%, #EAF3FB 100%);
+    background-size:
+      var(--cell) var(--cell),
+      var(--cell) var(--cell),
+      auto, auto, auto, auto, auto;
+    background-attachment:fixed;
   }
 
+  /* 배경에 흩어 놓은 연산 기호 */
+  .deco{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:0;
+  }
+  .deco span{
+    position:absolute;
+    color:var(--ink);
+    opacity:.09;
+    font-size:clamp(2.4rem,7vw,5.5rem);
+    line-height:1;
+    animation:drift 26s ease-in-out infinite;
+  }
+  .deco span:nth-child(1){ left:5%;  top:12%; animation-delay:-2s;  }
+  .deco span:nth-child(2){ left:88%; top:18%; animation-delay:-7s;  font-size:clamp(1.8rem,5vw,4rem); }
+  .deco span:nth-child(3){ left:14%; top:74%; animation-delay:-12s; }
+  .deco span:nth-child(4){ left:80%; top:80%; animation-delay:-18s; font-size:clamp(2rem,6vw,4.6rem); }
+  .deco span:nth-child(5){ left:46%; top:5%;  animation-delay:-9s;  font-size:clamp(1.6rem,4.5vw,3.4rem); }
+  .deco span:nth-child(6){ left:3%;  top:44%; animation-delay:-15s; font-size:clamp(1.6rem,4.5vw,3.4rem); }
+  .deco span:nth-child(7){ left:93%; top:50%; animation-delay:-4s;  }
+  .deco span:nth-child(8){ left:60%; top:92%; animation-delay:-21s; font-size:clamp(1.6rem,4.5vw,3.4rem); }
+
+  @keyframes drift{
+    0%,100%{ transform:translateY(0) rotate(-6deg); }
+    50%    { transform:translateY(-18px) rotate(6deg); }
+  }
+
+  /* 문제는 흰 종이 카드 위에 올려 숫자가 또렷하게 보이도록 한다 */
   .sheet{
+    position:relative;
+    z-index:1;
     width:100%;
     max-width:640px;
     text-align:center;
+    padding:clamp(24px,5vw,40px) clamp(16px,4vw,32px);
+    border-radius:26px;
+    background:rgba(255,255,255,.86);
+    border:1px solid rgba(255,255,255,.9);
+    box-shadow:
+      0 20px 55px rgba(31,58,95,.16),
+      0 2px 0 rgba(255,255,255,.85) inset;
+  }
+  @supports (backdrop-filter: blur(8px)){
+    .sheet{ backdrop-filter:blur(8px); }
   }
 
   /* ---------- 시작 화면 ---------- */
@@ -217,6 +271,11 @@
 </style>
 </head>
 <body>
+
+<div class="deco" aria-hidden="true">
+  <span>+</span><span>×</span><span>÷</span><span>−</span>
+  <span>=</span><span>□</span><span>÷</span><span>×</span>
+</div>
 
 <main class="sheet">
 
