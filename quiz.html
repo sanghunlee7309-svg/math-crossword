@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수학 십자말</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FDFCF7;
+    --grid:#DCE6EF;
+    --ink:#1F3A5F;
+    --pencil:#6B7A8F;
+    --correct:#1E8E5A;
+    --wrong:#D64550;
+    --marker:#FFD642;
+    --cell:28px;
+    --cs:clamp(46px,13vw,70px);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Jua','Malgun Gothic','맑은 고딕',sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:var(--cell) var(--cell);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px 48px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .sheet{
+    width:100%;
+    max-width:640px;
+    text-align:center;
+  }
+
+  /* ---------- 시작 화면 ---------- */
+
+  .title{
+    font-size:clamp(1.9rem,7vw,2.6rem);
+    margin:0 0 6px;
+    letter-spacing:.02em;
+  }
+  .subtitle{
+    color:var(--pencil);
+    font-size:1.05rem;
+    margin:0 0 36px;
+  }
+
+  .levels{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .level{
+    flex:1 1 160px;
+    max-width:190px;
+    background:#fff;
+    border:3px solid var(--ink);
+    border-radius:14px;
+    padding:20px 12px 16px;
+    cursor:pointer;
+    font:inherit;
+    color:inherit;
+    box-shadow:0 5px 0 var(--ink);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .level:hover{background:#FFFCEC;}
+  .level:active{transform:translateY(5px); box-shadow:0 0 0 var(--ink);}
+  .level .name{display:block; font-size:1.3rem; margin-top:12px;}
+  .level .range{display:block; color:var(--pencil); font-size:.95rem; margin-top:2px;}
+
+  /* 카드 안의 작은 십자말 그림 */
+  .mini{
+    display:grid;
+    grid-template-columns:repeat(3, auto);
+    gap:3px;
+    justify-content:center;
+    align-items:center;
+  }
+  .mini i{
+    display:block;
+    width:13px; height:13px;
+    border:2px solid var(--ink);
+    border-radius:2px;
+    background:#fff;
+  }
+  .mini i.hole{background:var(--marker);}
+  .mini b{
+    font-weight:normal;
+    font-size:9px;
+    color:var(--pencil);
+    line-height:1;
+  }
+
+  /* ---------- 문제 화면 ---------- */
+
+  .streak{
+    color:var(--pencil);
+    font-size:1rem;
+    margin:0 0 clamp(16px,4vw,28px);
+  }
+
+  .cross{
+    border-collapse:collapse;
+    margin:0 auto clamp(18px,4vw,28px);
+  }
+  .cross td{
+    width:var(--cs);
+    height:var(--cs);
+    padding:0;
+    text-align:center;
+  }
+
+  .cross .cell{
+    border:2px solid var(--ink);
+    background:#fff;
+    font-size:clamp(1.2rem,4.8vw,1.8rem);
+  }
+  .cross .cell.blank{background:#FFFBE8;}
+  .cross .cell.blank:focus-within{background:var(--marker);}
+  .cross .cell.ok{background:#EEF9F3; border-color:var(--correct);}
+  .cross .cell.no{background:#FDF0F1; border-color:var(--wrong);}
+  /* 채점 표시는 커서가 그 칸에 있어도 가려지지 않아야 한다 */
+  .cross .cell.ok:focus-within{background:#DAF1E5;}
+  .cross .cell.no:focus-within{background:#FAD5D8;}
+
+  .cross .cell input{
+    width:100%;
+    height:100%;
+    padding:0;
+    border:none;
+    background:transparent;
+    font:inherit;
+    text-align:center;
+    color:var(--ink);
+    outline:none;
+    caret-color:var(--ink);
+  }
+  .cross .cell.ok input{color:var(--correct);}
+  .cross .cell.no input{color:var(--wrong);}
+
+  /* 연산 기호와 등호 */
+  .cross .op,
+  .cross .eq{
+    color:var(--ink);
+    font-size:clamp(1.05rem,4.2vw,1.55rem);
+  }
+
+  /* 계산 결과는 표 바깥 여백에 적은 것처럼 테두리 없이 */
+  .cross .res{
+    color:var(--pencil);
+    font-size:clamp(1.05rem,4.2vw,1.55rem);
+  }
+  .cross .res.bad{color:var(--wrong);}
+
+  .mark{
+    font-size:1.2rem;
+    min-height:1.9em;
+    margin:0 0 16px;
+  }
+  .mark.no{color:var(--wrong);}
+
+  .btn{
+    font:inherit;
+    font-size:1.25rem;
+    color:#fff;
+    background:var(--ink);
+    border:none;
+    border-radius:12px;
+    padding:13px 42px;
+    cursor:pointer;
+    box-shadow:0 5px 0 #16293F;
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .btn:active{transform:translateY(5px); box-shadow:0 0 0 #16293F;}
+  .btn.ghost{
+    color:var(--ink);
+    background:#fff;
+    border:3px solid var(--ink);
+    box-shadow:0 5px 0 var(--ink);
+    font-size:1.05rem;
+    padding:10px 26px;
+  }
+
+  /* ---------- 완성 화면 ---------- */
+
+  .cheer{
+    font-size:clamp(2.2rem,9vw,3.4rem);
+    color:var(--correct);
+    margin:0 0 6px;
+  }
+  .cheer-note{color:var(--pencil); font-size:1.1rem; margin:0 0 8px;}
+  .cheer-count{font-size:1.2rem; margin:0 0 30px;}
+
+  .actions{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+
+  [hidden]{display:none !important;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<main class="sheet">
+
+  <!-- 시작 화면 -->
+  <section id="start">
+    <h1 class="title">수학 십자말</h1>
+    <p class="subtitle">가로로도 세로로도 식이 맞게 빈칸을 채워 보세요</p>
+    <div class="levels">
+      <button class="level" data-level="easy">
+        <span class="mini" data-holes="2"></span>
+        <span class="name">쉬움</span>
+        <span class="range">1~9 · 빈칸 2개</span>
+      </button>
+      <button class="level" data-level="normal">
+        <span class="mini" data-holes="3"></span>
+        <span class="name">보통</span>
+        <span class="range">1~12 · 빈칸 3개</span>
+      </button>
+      <button class="level" data-level="hard">
+        <span class="mini" data-holes="3"></span>
+        <span class="name">어려움</span>
+        <span class="range">1~20 · 빈칸 3개</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 문제 화면 -->
+  <section id="play" hidden>
+    <p class="streak" id="streak"></p>
+    <table class="cross" id="board"></table>
+    <p class="mark" id="mark" role="status" aria-live="polite"></p>
+    <button class="btn" id="submit">확인</button>
+  </section>
+
+  <!-- 완성 화면 -->
+  <section id="done" hidden>
+    <p class="cheer">완성!</p>
+    <p class="cheer-note" id="tries"></p>
+    <p class="cheer-count" id="total"></p>
+    <div class="actions">
+      <button class="btn" id="again">새 문제</button>
+      <button class="btn ghost" id="change">난이도 바꾸기</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  // 숫자 칸은 네 개: 0=왼쪽위 1=오른쪽위 2=왼쪽아래 3=오른쪽아래
+  //
+  //    0  op0  1  =  결과0        (가로 첫째 줄)
+  //   op2      op3
+  //    2  op1  3  =  결과1        (가로 둘째 줄)
+  //    =        =
+  //  결과2    결과3               (세로 첫째 줄, 세로 둘째 줄)
+  var PAIRS = [[0,1],[2,3],[0,2],[1,3]];
+
+  // 어떤 칸이 어떤 식에 들어가는지 (채점할 때 어느 결과에 표시할지 쓴다)
+  var CELL_LINES = [[0,2],[0,3],[1,2],[1,3]];
+
+  var LEVELS = {
+    easy:   { min: 1, max: 9,  holes: 2 },
+    normal: { min: 1, max: 12, holes: 3 },
+    hard:   { min: 1, max: 20, holes: 3 }
+  };
+
+  var el = {
+    start: document.getElementById('start'),
+    play: document.getElementById('play'),
+    done: document.getElementById('done'),
+    streak: document.getElementById('streak'),
+    board: document.getElementById('board'),
+    mark: document.getElementById('mark'),
+    submit: document.getElementById('submit'),
+    tries: document.getElementById('tries'),
+    total: document.getElementById('total'),
+    again: document.getElementById('again'),
+    change: document.getElementById('change')
+  };
+
+  var level = 'easy';
+  var puzzle = null;
+  var inputs = [];
+  var tries = 0;
+  var solved = 0;
+
+  function rand(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function shuffled(n){
+    var a = [];
+    for (var i = 0; i < n; i++) a.push(i);
+    for (var j = n - 1; j > 0; j--){
+      var k = rand(0, j);
+      var t = a[j]; a[j] = a[k]; a[k] = t;
+    }
+    return a;
+  }
+
+  function apply(op, x, y){
+    if (op === '+') return x + y;
+    if (op === '−') return x - y;
+    if (op === '×') return x * y;
+    return x / y;
+  }
+
+  // 이 두 수로 실제로 성립하는 기호만 고른다.
+  // 뺄셈은 결과가 0보다 클 때, 나눗셈은 딱 나누어떨어질 때만.
+  function pickOp(x, y){
+    var pool = ['+', '×'];
+    if (x - y >= 1) pool.push('−', '−', '−');
+    // 나눗셈은 나누어떨어질 때만 쓸 수 있어 기회가 드물다. 가능할 때 자주 고른다.
+    if (y > 1 && x % y === 0) pool.push('÷', '÷', '÷', '÷', '÷', '÷');
+    return pool[rand(0, pool.length - 1)];
+  }
+
+  // 빈칸에 들어갈 수 있는 모든 숫자 조합을 대입해 답이 몇 개인지 센다
+  function countSolutions(values, ops, results, holes, cfg){
+    var trial = values.slice();
+    var count = 0;
+
+    function rec(i){
+      if (count > 1) return;
+      if (i === holes.length){
+        for (var k = 0; k < 4; k++){
+          if (apply(ops[k], trial[PAIRS[k][0]], trial[PAIRS[k][1]]) !== results[k]) return;
+        }
+        count++;
+        return;
+      }
+      for (var v = cfg.min; v <= cfg.max; v++){
+        trial[holes[i]] = v;
+        rec(i + 1);
+        if (count > 1) return;
+      }
+    }
+
+    rec(0);
+    return count;
+  }
+
+  function buildOne(cfg){
+    var values = [], i;
+    for (i = 0; i < 4; i++) values.push(rand(cfg.min, cfg.max));
+
+    var ops = [];
+    for (i = 0; i < 4; i++) ops.push(pickOp(values[PAIRS[i][0]], values[PAIRS[i][1]]));
+
+    // 곱셈도 나눗셈도 없으면 한 자리를 곱셈으로 바꾼다 (곱셈은 어떤 수에도 쓸 수 있다)
+    if (ops.indexOf('×') < 0 && ops.indexOf('÷') < 0) ops[rand(0, 3)] = '×';
+
+    var results = [];
+    for (i = 0; i < 4; i++) results.push(apply(ops[i], values[PAIRS[i][0]], values[PAIRS[i][1]]));
+
+    var holes = shuffled(4).slice(0, cfg.holes).sort();
+    if (countSolutions(values, ops, results, holes, cfg) !== 1) return null;
+
+    return { values: values, ops: ops, results: results, holes: holes };
+  }
+
+  // 네 기호가 고르게 나오도록, 나눗셈이 들어간 문제를 먼저 찾아본다.
+  // 나눗셈은 나누어떨어지는 수를 만나야 쓸 수 있어 그냥 두면 거의 안 나온다.
+  function makePuzzle(cfg){
+    var fallback = null;
+
+    for (var attempt = 0; attempt < 400; attempt++){
+      var made = buildOne(cfg);
+      if (!made) continue;
+      if (made.ops.indexOf('÷') >= 0) return made;
+      if (!fallback) fallback = made;
+      if (attempt > 120 && fallback) return fallback;   // 오래 못 찾으면 그냥 내보낸다
+    }
+    return fallback;
+  }
+
+  function show(name){
+    el.start.hidden = name !== 'start';
+    el.play.hidden  = name !== 'play';
+    el.done.hidden  = name !== 'done';
+  }
+
+  function td(cls, text){
+    var t = document.createElement('td');
+    if (cls) t.className = cls;
+    if (text !== undefined) t.textContent = text;
+    return t;
+  }
+
+  function numberCell(index){
+    var t = td('cell');
+    if (puzzle.holes.indexOf(index) >= 0){
+      var inp = document.createElement('input');
+      inp.type = 'text';
+      inp.inputMode = 'numeric';
+      inp.setAttribute('pattern', '[0-9]*');
+      inp.maxLength = 3;
+      inp.setAttribute('aria-label', '빈칸 ' + (inputs.length + 1));
+      t.classList.add('blank');
+      t.appendChild(inp);
+      inputs.push({ input: inp, cell: t, answer: puzzle.values[index], index: index });
+    } else {
+      t.textContent = puzzle.values[index];
+    }
+    return t;
+  }
+
+  function resCell(line){
+    var t = td('res', puzzle.results[line]);
+    t.setAttribute('data-line', line);
+    return t;
+  }
+
+  function drawBoard(){
+    el.board.innerHTML = '';
+    inputs = [];
+
+    var rows = [document.createElement('tr'), document.createElement('tr'),
+                document.createElement('tr'), document.createElement('tr'),
+                document.createElement('tr')];
+
+    // 0 op0 1 = 결과0
+    rows[0].appendChild(numberCell(0));
+    rows[0].appendChild(td('op', puzzle.ops[0]));
+    rows[0].appendChild(numberCell(1));
+    rows[0].appendChild(td('eq', '='));
+    rows[0].appendChild(resCell(0));
+
+    // 세로 기호 줄
+    rows[1].appendChild(td('op', puzzle.ops[2]));
+    rows[1].appendChild(td());
+    rows[1].appendChild(td('op', puzzle.ops[3]));
+    rows[1].appendChild(td());
+    rows[1].appendChild(td());
+
+    // 2 op1 3 = 결과1
+    rows[2].appendChild(numberCell(2));
+    rows[2].appendChild(td('op', puzzle.ops[1]));
+    rows[2].appendChild(numberCell(3));
+    rows[2].appendChild(td('eq', '='));
+    rows[2].appendChild(resCell(1));
+
+    // 세로 등호 줄
+    rows[3].appendChild(td('eq', '='));
+    rows[3].appendChild(td());
+    rows[3].appendChild(td('eq', '='));
+    rows[3].appendChild(td());
+    rows[3].appendChild(td());
+
+    // 세로 결과 줄
+    rows[4].appendChild(resCell(2));
+    rows[4].appendChild(td());
+    rows[4].appendChild(resCell(3));
+    rows[4].appendChild(td());
+    rows[4].appendChild(td());
+
+    for (var i = 0; i < rows.length; i++) el.board.appendChild(rows[i]);
+
+    if (inputs.length) inputs[0].input.focus();
+  }
+
+  function check(){
+    tries++;
+
+    var empty = 0, allRight = true, badLines = {};
+
+    for (var i = 0; i < inputs.length; i++){
+      var it = inputs[i];
+      var raw = it.input.value.trim();
+
+      if (!/^[0-9]+$/.test(raw)){ empty++; allRight = false; continue; }
+
+      if (Number(raw) === it.answer){
+        it.cell.classList.remove('no');
+        it.cell.classList.add('ok');
+      } else {
+        it.cell.classList.remove('ok');
+        it.cell.classList.add('no');
+        allRight = false;
+        var lines = CELL_LINES[it.index];
+        badLines[lines[0]] = true;
+        badLines[lines[1]] = true;
+      }
+    }
+
+    // 틀린 칸이 들어간 식의 결과에 표시를 붙여 어느 줄을 다시 볼지 알려준다
+    var res = el.board.querySelectorAll('.res');
+    for (var j = 0; j < res.length; j++){
+      res[j].classList.toggle('bad', !!badLines[res[j].getAttribute('data-line')]);
+    }
+
+    if (empty > 0){
+      el.mark.textContent = '빈칸을 모두 채워 주세요';
+      el.mark.className = 'mark no';
+      return;
+    }
+    if (!allRight){
+      el.mark.textContent = '빨간 칸을 다시 볼까요?';
+      el.mark.className = 'mark no';
+      return;
+    }
+
+    solved++;
+    finish();
+  }
+
+  function finish(){
+    el.tries.textContent = tries === 1 ? '한 번에 맞췄어요!' : tries + '번 만에 맞췄어요';
+    el.total.textContent = '지금까지 ' + solved + '문제';
+    show('done');
+    el.again.focus();
+  }
+
+  function newBoard(){
+    var made = makePuzzle(LEVELS[level]);
+    if (!made) return;          // 사실상 일어나지 않지만, 실패하면 화면을 건드리지 않는다
+    puzzle = made;
+    tries = 0;
+    el.mark.textContent = '';
+    el.mark.className = 'mark';
+    el.streak.textContent = LEVELS[level].min + '~' + LEVELS[level].max + ' · 푼 문제 ' + solved + '개';
+    show('play');
+    drawBoard();
+  }
+
+  // 시작 화면 카드 안의 작은 십자말 그림
+  var minis = document.querySelectorAll('.mini');
+  for (var m = 0; m < minis.length; m++){
+    var holeCount = Number(minis[m].getAttribute('data-holes'));
+    var which = shuffled(4).slice(0, holeCount);
+    var layout = ['box0', 'op', 'box1', 'op', '', 'op', 'box2', 'op', 'box3'];
+    for (var s = 0; s < layout.length; s++){
+      var node;
+      if (layout[s].indexOf('box') === 0){
+        node = document.createElement('i');
+        if (which.indexOf(Number(layout[s].slice(3))) >= 0) node.className = 'hole';
+      } else if (layout[s] === 'op'){
+        node = document.createElement('b');
+        node.textContent = '+';
+      } else {
+        node = document.createElement('b');
+        node.textContent = '';
+      }
+      minis[m].appendChild(node);
+    }
+  }
+
+  var levelButtons = document.querySelectorAll('.level');
+  for (var i = 0; i < levelButtons.length; i++){
+    levelButtons[i].addEventListener('click', function(){
+      level = this.getAttribute('data-level');
+      solved = 0;
+      newBoard();
+    });
+  }
+
+  el.submit.addEventListener('click', check);
+  el.again.addEventListener('click', newBoard);
+  el.change.addEventListener('click', function(){ show('start'); });
+
+  // 입력칸에서 Enter: 다음 빈칸으로, 마지막 칸이면 확인
+  el.board.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    var at = -1;
+    for (var i = 0; i < inputs.length; i++){
+      if (inputs[i].input === e.target){ at = i; break; }
+    }
+    if (at >= 0 && at < inputs.length - 1) inputs[at + 1].input.focus();
+    else check();
+  });
+
+  // 고치기 시작하면 그 칸의 채점 표시를 지운다
+  el.board.addEventListener('input', function(e){
+    if (e.target.tagName !== 'INPUT') return;
+    e.target.parentNode.classList.remove('ok', 'no');
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    if (!el.done.hidden){ e.preventDefault(); newBoard(); }
+  });
+
+})();
+</script>
+</body>
+</html>
