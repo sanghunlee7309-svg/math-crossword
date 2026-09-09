@@ -1,8 +1,11 @@
 # 수학 십자말
 
+[![바로 풀어보기](https://img.shields.io/badge/%EB%B0%94%EB%A1%9C%20%ED%92%80%EC%96%B4%EB%B3%B4%EA%B8%B0-number--grid--quiz.vercel.app-1F3A5F?style=for-the-badge)](https://number-grid-quiz.vercel.app)
+
 초등학생용 사칙연산 연습 퍼즐입니다. 숫자 칸 네 개를 가로로 읽어도 세로로 읽어도 식이 성립하도록 빈칸을 채웁니다.
 
 **웹에서 바로 풀기 → https://number-grid-quiz.vercel.app**
+설치 없이 링크만 열면 됩니다. 휴대폰과 태블릿에서도 그대로 동작합니다.
 
 ```
    □   ×   3   =  18
